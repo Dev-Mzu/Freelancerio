@@ -1,5 +1,8 @@
 // Import utilities
 import {checkAuthStatus, getAuthToken} from './auth_utils.js';
+import getBaseUrl from './base-url.mjs';
+const baseURL = getBaseUrl();
+
 
 // freelancer-dashboard.js - Enhanced dashboard implementation with new user experience
 
@@ -147,7 +150,7 @@ async function loadUserProfile(userId) {
             throw new Error('Authentication token not available');
         }
 
-        const response = await fetch(`/api/users/${userId}/details`, {
+        const response = await fetch(`${baseURL}/api/users/${userId}/details`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -198,7 +201,7 @@ async function loadJobApplications(userId) {
     try {
         const token = await getAuthToken();
 
-        const response = await fetch(`/api/applications/user/${userId}`, {
+        const response = await fetch(`${baseURL}/api/applications/user/${userId}`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -221,7 +224,7 @@ async function loadJobApplications(userId) {
  */
 async function loadAvailableJobs() {
     try {
-        const response = await fetch('/api/jobs/all');
+        const response = await fetch(`${baseURL}/api/jobs/all`);
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -243,7 +246,7 @@ async function loadUserStats(userId) {
     try {
         const token = await getAuthToken();
 
-        const response = await fetch(`/api/applications/user/${userId}/stats`, {
+        const response = await fetch(`${baseURL}/api/applications/user/${userId}/stats`, {
             headers: {
                 'Authorization': `Bearer ${token}`
             }
@@ -496,7 +499,7 @@ function updateStatsUI(stats, isNewUser) {
  */
 async function fetchJobDetails(jobId) {
     try {
-        const response = await fetch(`/api/jobs/${jobId}`);
+        const response = await fetch(`${baseURL}/api/jobs/${jobId}`);
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
