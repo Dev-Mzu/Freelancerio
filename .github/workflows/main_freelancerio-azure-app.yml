@@ -1,0 +1,64 @@
+name: Build and deploy Node.js app to Azure
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.x'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build and clean
+        run: |
+          npm run build
+          # Remove development files
+          Remove-Item .env -ErrorAction SilentlyContinue
+          Remove-Item *.env.local -ErrorAction SilentlyContinue
+          # Ensure web.config exists
+          if (!(Test-Path -Path "web.config")) {
+            Copy-Item -Path "public/web.config" -Destination "web.config"
+          }
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: node-app
+          path: |
+            .
+            !node_modules/
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: 
+      name: production
+      url: https://freelancerio-azure-app-dugshua8d0fqaafg.southafricanorth-01.azurewebsites.net
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: node-app
+
+      - name: Install production dependencies
+        run: npm install --production
+
+      - name: Deploy to Azure
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'freelancerio-azure-app'
+          slot-name: 'Production'
+          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_6685209C9EF84057A46D4974926C36DF }}
+
+      - name: Add deployment URL to GitHub environment
+        run: echo "DEPLOYMENT_URL=https://freelancerio-azure-app-dugshua8d0fqaafg.southafricanorth-01.azurewebsites.net" >> $GITHUB_ENV

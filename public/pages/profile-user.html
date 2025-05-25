@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Update your freelancer profile information">
+  <title>Freelancer Profile Update</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
+  <header class="bg-white shadow-sm">
+    <nav class="max-w-7xl mx-auto px-4 py-3" aria-label="Main navigation">
+      <ul class="flex space-x-6 items-center">
+        <li><a href="/freelancer-home" id="user-name">Welcome John</a></li>
+        <li><a href="/freelancer-home" class="hover:text-blue-600 transition-colors">Jobs</a></li>
+          <li><a href="/freelancer-dashboard">Dashboard</a></li>
+        <li><a href="/profile-user" class="font-medium text-blue-600 hover:text-blue-700 transition-colors"
+            aria-current="page">Profile</a></li>
+        <li><a href="/" class="hover:text-blue-600 transition-colors">Logout</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="flex-grow max-w-4xl mx-auto my-8 px-4 w-full">
+    <article class="bg-white shadow rounded-xl p-6">
+      <header class="text-center mb-10">
+        <figure class="flex justify-center mb-4">
+          <img id="user-profile-picture" src="" alt="Profile picture"
+            class="rounded-full w-32 h-32 border-4 border-blue-100 object-cover shadow-md">
+        </figure>
+        <h1 class="text-3xl font-bold mb-1 text-gray-900">Your Profile</h1>
+        <section class="space-y-1">
+          <h1 id="user-name-display" class="text-2xl font-semibold text-gray-900">Loading Name...</h1>
+          <p id="user-email" class="text-2xl font-semibold text-gray-900">Loading Email...</p>
+        </section>
+      </header>
+
+      <section aria-labelledby="edit-heading">
+        <h2 id="edit-heading" class="text-2xl font-semibold mb-6 text-gray-900 border-b pb-2">Profile Summary</h2>
+
+        <!-- Display Fields -->
+        <section id="display-section" class="space-y-6">
+
+          <section>
+            <label class="block font-medium text-gray-700 mb-1">About You</label>
+            <p id="about-display" class="bg-gray-100 p-3 rounded-lg">Loading about info...</p>
+          </section>
+
+          <section>
+            <label class="block font-medium text-gray-700 mb-1">Skills</label>
+            <p id="skills-display" class="bg-gray-100 p-3 rounded-lg">Loading skills...</p>
+          </section>
+
+         
+
+          <section>
+            <label class="block font-medium text-gray-700 mb-1">Work Experience (Read-only)</label>
+            <p id="experience-display" class="bg-gray-100 p-3 rounded-lg">Loading work experience...</p>
+          </section>
+
+          <section class="flex justify-end">
+            <button id="edit-btn" class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition">
+              <i class="fas fa-edit mr-2"></i>Edit Profile
+            </button>
+          </section>
+        </section>
+
+        <!-- Editable Form Fields -->
+        <form id="edit-form" class="space-y-6 hidden mt-8">
+
+          <section>
+            <label for="about" class="block font-medium text-gray-700 mb-1">About You</label>
+            <textarea id="about" name="about" rows="4"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+          </section>
+
+          <section>
+            <label for="skills" class="block font-medium text-gray-700 mb-1">Skills</label>
+            <textarea id="skills" name="skills" rows="3"
+              class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+          </section>
+
+          <section class="flex justify-end gap-4">
+            <button type="button" id="cancel-btn"
+              class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-400 transition">
+              Cancel
+            </button>
+            <button type="submit"
+              class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition font-medium">
+              <i class="fas fa-save mr-2"></i> Save Changes
+            </button>
+          </section>
+        </form>
+      </section>
+    </article>
+  </main>
+
+  <footer class="bg-gray-100 text-center py-6 mt-12">
+    <p class="text-gray-600">&copy; 2025 Freelancerio. All rights reserved.</p>
+  </footer>
+
+ <script type = "module" src="../scripts/user-profile.js"></script>
+</body>
+
+</html>

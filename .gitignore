@@ -1,0 +1,13 @@
+# Java Script files
+node_modules/
+
+#vscode files
+.vs
+.vs/
+.vscode/
+.vscode
+
+# Test coverage output
+coverage/
+
+Changes.md
