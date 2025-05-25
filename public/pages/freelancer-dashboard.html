@@ -54,10 +54,10 @@
     console.log(windowLocation);
     let baseUrl;
     if (windowLocation === "localhost"){
-        baseUrl = "http://localhost:3000";
+        baseURL = "http://localhost:3000";
     }
     else{
-        baseUrl = "https://freelancerio-azure-app-dugshua8d0fqaafg.southafricanorth-01.azurewebsites.net"
+        baseURL = "https://freelancerio-azure-app-dugshua8d0fqaafg.southafricanorth-01.azurewebsites.net"
     }
     const userId = sessionStorage.getItem('firebaseId'); // assuming firebaseId is used for identification
     document.getElementById("user-name").textContent = `${sessionStorage.getItem("display-name")}`;
