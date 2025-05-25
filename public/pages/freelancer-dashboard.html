@@ -8,6 +8,8 @@
   <title>Freelancer Profile Update</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 </head>
 
 <body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
@@ -36,7 +38,7 @@
   <main class="flex-grow max-w-4xl mx-auto my-8 px-4 w-full">
     <!-- Dynamic Content will be injected here -->
     <section id="main-content">
-      <h2 class="text-2xl font-semibold text-gray-800">Welcome to your dashboard, John!</h2>
+      <h2 class="text-2xl font-semibold text-gray-800" id="display-text">Welcome to your dashboard, John!</h2>
       <p class="text-gray-600 mt-2">Choose an option from the navigation above to view your data.</p>
     </section>
   </main>
@@ -49,6 +51,8 @@
     // Base URL for API calls
     const baseURL = 'http://localhost:3000'; // replace with your actual backend URL
     const userId = sessionStorage.getItem('firebaseId'); // assuming firebaseId is used for identification
+    document.getElementById("user-name").textContent = `${sessionStorage.getItem("display-name")}`;
+    document.getElementById("display-text").textContent = `Welcome to your dashboard, ${sessionStorage.getItem("display-name")}!`;
 
     // Main content section
     const mainContent = document.getElementById('main-content');
@@ -208,8 +212,8 @@ function showContractDetails(contract) {
       <button id="acceptButton" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600" ${contract.status === 'accepted' ? 'disabled' : ''}>
         ${contract.status === 'accepted' ? 'Accepted' : 'Accept'}
       </button>
-      <button id="rejectButton" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600" ${contract.status === 'rejected' ? 'disabled' : ''}>
-        ${contract.status === 'rejected' ? 'Rejected' : 'Reject'}
+      <button id="rejectButton" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600" ${contract.status === 'declined' ? 'disabled' : ''}>
+        ${contract.status === 'declined' ? 'Rejected' : 'Reject'}
       </button>
       <button id="backButton" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
         Back to Contracts
@@ -303,7 +307,7 @@ async function fetchJobs() {
                 <p>Status: <strong>${job.taken_status ? 'Taken' : 'Available'}</strong></p>
                 <p>Company: ${job.company}</p>
                 <p>Job Description: ${job.job_description.length > 30 ? job.job_description.slice(0, 30) + '...' : job.job_description}</p>
-                <p>Total Pay: $${job.total_pay}</p>
+                <p>Total Pay: R${job.total_pay}</p>
                 <p>Duration: ${job.duration_months} months</p>
             `;
 
@@ -342,7 +346,7 @@ function displaySingleJobView(job) {
     `;
 
     // Display Milestones
-    const milestonesContainer = document.createElement('div');
+    const milestonesContainer = document.createElement('section');
     milestonesContainer.classList.add('milestones-container', 'mt-4');
 
     if (job.milestones && job.milestones.length > 0) {
@@ -354,7 +358,7 @@ function displaySingleJobView(job) {
                 <h4 class="font-semibold text-lg">Milestone ${index + 1}: ${milestone.title}</h4>
                 <p><strong>Description:</strong> ${milestone.description}</p>
                 <p><strong>Amount:</strong> R${milestone.amount}</p>
-                <p><strong>Status:</strong> Payment Pending</p>
+                <p><strong>Status:</strong> Payment ${milestone.status}</p>
             `;
 
             milestonesContainer.appendChild(milestoneElement);
@@ -384,27 +388,162 @@ function displaySingleJobView(job) {
 
 
     // Fetch Analysis
-    async function fetchAnalysis() {
-      try {
-        const response = await fetch(`${baseURL}/analysis/${userId}`);
-        const analysis = await response.json();
-        if (!analysis) {
-          mainContent.innerHTML = "<p class='text-gray-600'>No analysis data available.</p>";
-        } else {
-          mainContent.innerHTML = `
-            <h2 class="text-2xl font-semibold text-gray-800">Your Analysis</h2>
-            <ul class="list-disc pl-5 mt-4">
-              <li class="text-gray-700">Total Earnings: R${analysis.totalEarnings}</li>
-              <li class="text-gray-700">Total Jobs Accepted: ${analysis.totalJobsAccepted}</li>
-              <li class="text-gray-700">Average Job Rating: ${analysis.averageRating}</li>
-            </ul>
-          `;
-        }
-      } catch (error) {
-        console.error("Error fetching analysis:", error);
-        mainContent.innerHTML = "<p class='text-red-500'>Failed to load analysis.</p>";
-      }
+// Fetch Analysis
+async function fetchAnalysis() {
+  try {
+    const response = await fetch(`${baseURL}/dashboard/analysis/${userId}`);
+    const analysis = await response.json(); // Assuming the server returns valid JSON
+    
+    // Check if the response data exists
+    if (!analysis || Object.keys(analysis).length === 0) {
+      mainContent.innerHTML = "<p class='text-gray-600'>No analysis data available.</p>";
+      return;
     }
+
+    // Construct the HTML with Tailwind CSS styling
+    mainContent.innerHTML = `
+      <section class="bg-white p-6 rounded-lg shadow-lg max-w-2xl mx-auto">
+        <h2 class="text-3xl font-semibold text-gray-800 mb-6">Your Analysis</h2>
+        
+        <ul class="list-disc pl-6 text-lg space-y-4 text-gray-700">
+          <!-- Application Count -->
+          <li class="flex items-center">
+            <span class="w-1/3 font-medium">Total Applications:</span>
+            <span class="text-blue-600">${analysis.applicationCount}</span>
+          </li>
+          
+          <!-- Accepted Jobs Count -->
+          <li class="flex items-center">
+            <span class="w-1/3 font-medium">Total Jobs Accepted:</span>
+            <span class="text-blue-600">${analysis.acceptedJobsCount}</span>
+          </li>
+          
+          <!-- Total Earnings -->
+          <li class="flex items-center">
+            <span class="w-1/3 font-medium">Total Earnings:</span>
+            <span class="text-green-600">R${analysis.totalEarnings.toFixed(2)}</span>
+          </li>
+          
+          <!-- Unique Clients Count -->
+          <li class="flex items-center">
+            <span class="w-1/3 font-medium">Unique Clients:</span>
+            <span class="text-yellow-500">${analysis.uniqueClientCount}</span>
+          </li>
+        </ul>
+
+        <button id="download-pdf" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 center mt-6" onClick="downloadPDF()">
+            Download PDF
+        </button>
+      </section>
+
+    
+
+    `;
+  } catch (error) {
+    console.error("Error fetching analysis:", error);
+    mainContent.innerHTML = "<p class='text-red-500'>Failed to load analysis.</p>";
+  }
+}
+
+    async function downloadPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // Fetch the data from the API
+    const applicationsData = await fetchApplicationsData();
+    const contractsData = await fetchContractsData();
+    const analysisData = await fetchAnalysisData();
+    
+    // Add Title
+    doc.setFontSize(22);
+    doc.text('Freelancer Profile Report', 14, 20);
+
+    // Add Applications Section
+    doc.setFontSize(18);
+    doc.text('Your Applications:', 14, 30);
+    if (applicationsData.length === 0) {
+      doc.setFontSize(12);
+      doc.text('No applications available.', 14, 40);
+    } else {
+      let yPosition = 40;
+      applicationsData.forEach(app => {
+        doc.setFontSize(12);
+        doc.text(`Job Title: ${app.job_title}`, 14, yPosition);
+        doc.text(`Client: ${app.client_name}`, 14, yPosition + 10);
+        doc.text(`Status: ${app.status}`, 14, yPosition + 20);
+        yPosition += 30;
+      });
+    }
+
+    // Add Contracts Section
+    doc.addPage();
+    doc.setFontSize(18);
+    doc.text('Your Contracts:', 14, 30);
+    if (contractsData.length === 0) {
+      doc.setFontSize(12);
+      doc.text('No contracts available.', 14, 40);
+    } else {
+      let yPosition = 40;
+      contractsData.forEach(contract => {
+        doc.setFontSize(12);
+        doc.text(`Job Title: ${contract.job_title}`, 14, yPosition);
+        doc.text(`Status: ${contract.status}`, 14, yPosition + 10);
+        doc.text(`Freelancer: ${contract.freelancer_name}`, 14, yPosition + 20);
+        doc.text(`Contract Terms: ${contract.contract_terms.slice(0, 50)}...`, 14, yPosition + 30);
+        yPosition += 40;
+      });
+    }
+
+    // Add Analysis Section
+    doc.addPage();
+    doc.setFontSize(18);
+    doc.text('Your Analysis:', 14, 30);
+    doc.setFontSize(12);
+    doc.text(`Total Applications: ${analysisData.applicationCount}`, 14, 40);
+    doc.text(`Total Jobs Accepted: ${analysisData.acceptedJobsCount}`, 14, 50);
+    doc.text(`Total Earnings: R${analysisData.totalEarnings.toFixed(2)}`, 14, 60);
+    doc.text(`Unique Clients: ${analysisData.uniqueClientCount}`, 14, 70);
+
+    // Save the PDF
+    doc.save('freelancer-profile.pdf');
+  }
+
+  // Fetch Applications Data
+  async function fetchApplicationsData() {
+    try {
+      const response = await fetch(`${baseURL}/apply/get-applications/${userId}`);
+      const applications = await response.json();
+      return applications;
+    } catch (error) {
+      console.error('Error fetching applications:', error);
+      return [];
+    }
+  }
+
+  // Fetch Contracts Data
+  async function fetchContractsData() {
+    try {
+      const response = await fetch(`${baseURL}/contracts/get-all-freelancer-contracts/${userId}`);
+      const contracts = await response.json();
+      return contracts;
+    } catch (error) {
+      console.error('Error fetching contracts:', error);
+      return [];
+    }
+  }
+
+  // Fetch Analysis Data
+  async function fetchAnalysisData() {
+    try {
+      const response = await fetch(`${baseURL}/dashboard/analysis/${userId}`);
+      const analysis = await response.json();
+      return analysis;
+    } catch (error) {
+      console.error('Error fetching analysis:', error);
+      return {};
+    }
+  }
+
 
     // Event listeners for navigation
     document.getElementById('view-applications').addEventListener('click', fetchApplications);

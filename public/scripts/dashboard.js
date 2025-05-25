@@ -1,3 +1,7 @@
+import getBaseUrl from './base-url.mjs';
+
+const baseURL = getBaseUrl();
+
 let usersCache = [];
 let jobsCache = [];
 let appsCache = [];
@@ -16,7 +20,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 async function loadUsers() {
   const role = document.getElementById("filter-role").value;
-  const res = await fetch(`http://localhost:3000/dashboard/users${role ? `?role=${role}` : ''}`);
+  const res = await fetch(`${baseURL}/dashboard/users${role ? `?role=${role}` : ''}`);
   usersCache = await res.json();
   const table = document.getElementById("users-table");
   table.innerHTML = `
@@ -29,7 +33,7 @@ async function loadUsers() {
 
 async function loadJobs() {
   const category = document.getElementById("filter-job-category").value;
-  const res = await fetch(`http://localhost:3000/dashboard/jobs${category ? `?category=${category}` : ''}`);
+  const res = await fetch(`${baseURL}/dashboard/jobs${category ? `?category=${category}` : ''}`);
   jobsCache = await res.json();
   const table = document.getElementById("jobs-table");
   table.innerHTML = `
@@ -41,7 +45,7 @@ async function loadJobs() {
 }
 
 async function loadApplications() {
-  const res = await fetch(`http://localhost:3000/dashboard/applications`);
+  const res = await fetch(`${baseURL}/dashboard/applications`);
   appsCache = await res.json();
   const table = document.getElementById("apps-table");
   table.innerHTML = `
@@ -53,7 +57,7 @@ async function loadApplications() {
 }
 
 async function loadSummary() {
-  const res = await fetch('http://localhost:3000/dashboard/summary');
+  const res = await fetch(`${baseURL}/dashboard/summary`);
   const data = await res.json();
   document.getElementById('summary').innerHTML = `
     <div class="bg-white p-4 shadow rounded">Total Users: ${data.totalUsers}</div>
@@ -80,7 +84,7 @@ async function exportDashboardPDF() {
   doc.text("Summary", 14, y);
   y += 8;
   doc.setFontSize(11);
-  const summary = await fetch('http://localhost:3000/dashboard/summary').then(res => res.json());
+  const summary = await fetch(`${baseURL}/dashboard/summary`).then(res => res.json());
 
   Object.entries(summary).forEach(([key, value]) => {
     if (typeof value === "object") {
@@ -125,7 +129,7 @@ function exportDashboardCSV() {
 
   // Add Summary Section
   exportable.push({ Section: 'Summary' });
-  fetch('http://localhost:3000/dashboard/summary')
+  fetch(`${baseURL}/dashboard/summary`)
     .then(res => res.json())
     .then(summary => {
       for (let key in summary) {

@@ -1082,7 +1082,7 @@ document.getElementById("view_current_jobs").addEventListener("click", async (ev
                 <p>Status: <strong>${job.taken_status ? 'Taken' : 'Available'}</strong></p>
                 <p>Company: ${job.company}</p>
                 <p>Job Description: ${job.job_description.length > 30 ? job.job_description.slice(0, 30) + '...' : job.job_description}</p>
-                <p>Total Pay: $${job.total_pay}</p>
+                <p>Total Pay: R${job.total_pay}</p>
                 <p>Duration: ${job.duration_months} months</p>
             `;
 
@@ -1120,7 +1120,7 @@ function displaySingleJobView(job) {
     `;
 
     // Display Milestones
-    const milestonesContainer = document.createElement('div');
+    const milestonesContainer = document.createElement('section');
     milestonesContainer.classList.add('milestones-container', 'mt-4');
 
     if (job.milestones && job.milestones.length > 0) {
@@ -1138,12 +1138,34 @@ function displaySingleJobView(job) {
             `;
 
             // Add event listener to the Pay button
-            const payButton = milestoneElement.querySelector(`#payButton-${index}`);
-            payButton.addEventListener('click', () => {
-                alert(`Processing payment for Milestone ${index + 1}...`); // Placeholder for payment logic
-            });
+           const payButton = milestoneElement.querySelector(`#payButton-${index}`);
+            payButton.textContent = 'Make Payment';
+            payButton.classList.add(
+            'inline-block', 'bg-green-600', 'text-white',
+            'px-6', 'py-2', 'rounded-lg', 'hover:bg-green-700',
+            'transition', 'duration-300', 'w-full', 'sm:w-auto'
+          );
 
-            milestonesContainer.appendChild(milestoneElement);
+          payButton.addEventListener('click', async () => {
+            alert("clicked");
+            try {
+              const res = await fetch(`${baseURL}/create-checkout-session`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  job_title: job.job_title +" - "+ milestone.milestone_title,
+                  total_pay: milestone.amount
+                })
+              });
+              const { url } = await res.json();
+              window.location.href = url; // Redirect to Stripe Checkout
+            } catch (err) {
+              alert('Failed to redirect to payment page: ' + err.message);
+            }
+          });
+
+
+          milestonesContainer.appendChild(milestoneElement);
         });
     } else {
         milestonesContainer.innerHTML = "<p>No milestones available for this job.</p>";
@@ -1193,7 +1215,7 @@ async function loadJobs() {
                 <p>Status: <strong>${job.taken_status ? 'Taken' : 'Available'}</strong></p>
                 <p>Company: ${job.company}</p>
                 <p>Job Description: ${job.job_description.length > 30 ? job.job_description.slice(0, 30) + '...' : job.job_description}</p>
-                <p>Total Pay: $${job.total_pay}</p>
+                <p>Total Pay: R${job.total_pay}</p>
                 <p>Duration: ${job.duration_months} months</p>
             `;
             
@@ -1236,7 +1258,7 @@ document.getElementById("view_contracts").addEventListener("click", async (event
             console.log(contract); // Log each contract to the console (or process them as needed)
 
             // Example: Create a contract card and append it to the display section
-            const contractElement = document.createElement('div');
+            const contractElement = document.createElement('section');
             contractElement.classList.add('contract-card', 'mb-4', 'p-4', 'bg-gray-300', 'rounded-lg');
             
             contractElement.innerHTML = `
@@ -1320,5 +1342,78 @@ function showContractDetails(contract) {
     
     document.getElementById("display-section").appendChild(contractDetailElement);
 }
+
+
+//handle dashboard
+document.getElementById("view_dashboard").addEventListener("click", async function showAnalysisDetails(event) {
+    event.preventDefault();
+    
+    // Get client ID from sessionStorage
+    const clientId = sessionStorage.getItem('firebaseId'); // Replace with the actual client ID (you can get it dynamically, e.g., from the logged-in user)
+    
+    if (!clientId) {
+        console.error("Client ID not found.");
+        alert("Client is not logged in.");
+        return;
+    }
+
+    // Change the page heading
+    document.getElementById('client-page-heading').textContent = "Analysis Details"; 
+    
+    // Clear the display section before appending new content
+    document.getElementById("display-section").innerHTML = ''; 
+
+    // Show loading indicator while data is being fetched
+    const loadingMessage = document.createElement('section');
+    loadingMessage.classList.add('p-6', 'bg-blue-100', 'rounded-lg', 'text-blue-800', 'text-center');
+    loadingMessage.textContent = 'Loading analysis data, please wait...';
+    document.getElementById("display-section").appendChild(loadingMessage);
+
+    try {
+        // Fetch analysis data from the backend
+        const res = await fetch(`${baseURL}/dashboard/client-analysis/${clientId}`);
+        
+        // Check if the response is okay
+        if (!res.ok) {
+            throw new Error('Failed to fetch analysis data');
+        }
+
+        // Parse the response data
+        const analysisData = await res.json();
+
+        // If no data is returned or the data is incomplete
+        if (!analysisData || Object.keys(analysisData).length === 0) {
+            throw new Error('No analysis data found for this client.');
+        }
+        
+        // Remove loading message and proceed to display the data
+        loadingMessage.remove();
+
+        // Create a container to hold the analysis details
+        const analysisContainer = document.createElement('section');
+        analysisContainer.classList.add('analysis-container', 'p-6', 'bg-white', 'rounded-lg', 'shadow-lg');
+
+        // Add the statistics to the container
+        analysisContainer.innerHTML = `
+            <h3 class="text-2xl font-bold mb-4">Client Analysis</h3>
+            <p><strong>Total Applications:</strong> ${analysisData.totalApplications}</p>
+            <p><strong>Total Money Paid:</strong> R${analysisData.totalMoneyPaid.toLocaleString()}</p>
+            <p><strong>Total Jobs Posted:</strong> ${analysisData.totalJobsPosted}</p>
+            <p><strong>Average Applications per Job:</strong> ${analysisData.averageApplicationsPerJob}</p>
+        `;
+
+        // Append the analysis container to the display section
+        document.getElementById("display-section").appendChild(analysisContainer);
+    } catch (error) {
+        console.error('Error fetching analysis data:', error);
+        // Remove the loading message and show an error message if data fetch fails
+        loadingMessage.remove();
+
+        const errorMessage = document.createElement('section');
+        errorMessage.classList.add('p-6', 'bg-red-100', 'rounded-lg', 'text-red-800');
+        errorMessage.textContent = 'Failed to load analysis details. Please try again later.';
+        document.getElementById("display-section").appendChild(errorMessage);
+    }
+});
 
 
