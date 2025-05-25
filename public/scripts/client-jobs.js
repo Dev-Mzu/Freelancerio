@@ -273,57 +273,10 @@ function createJobItem(job) {
         applicationsButton.textContent = 'View Applications';
 
         applicationsButton.addEventListener('click', () => {
-            viewApplications(jobId);
+            viewApplications(job,jobId);
         });
 
-        // Function to handle viewing applications for a specific job
-        function viewApplications(jobId) {
-            try {
-                // Store the client ID in sessionStorage so the applications page can access it
-                const clientId = getCurrentUserId(); // Replace this with your actual function to get current user ID
-                sessionStorage.setItem('clientId', clientId);
-
-                // Navigate to the applications page with the job ID as a parameter
-                window.location.href = `/view-applications?jobId=${jobId}`;
-            } catch (error) {
-                console.error('Error navigating to applications page:', error);
-                alert('Failed to load applications page. Please try again.');
-            }
-        }
-
-        // Alternative approach - if you want to pass more data via URL parameters
-        function viewApplicationsWithData(jobId, jobTitle, totalPay) {
-            try {
-                const clientId = getCurrentUserId();
-                sessionStorage.setItem('clientId', clientId);
-
-                // Pass additional job data as URL parameters
-                const params = new URLSearchParams({
-                    jobId: jobId,
-                    jobTitle: jobTitle,
-                    totalPay: totalPay
-                });
-
-                window.location.href = `/view-applications?${params.toString()}`;
-            } catch (error) {
-                console.error('Error navigating to applications page:', error);
-                alert('Failed to load applications page. Please try again.');
-            }
-        }
-
-        // Helper function to get current user ID - replace with your actual implementation
-        function getCurrentUserId() {
-            // This should return the current logged-in client's ID
-            // Replace with your actual authentication logic
-            return localStorage.getItem('userId') || sessionStorage.getItem('userId') || 'your-client-id';
-        }
-        // const applicationsButton = document.createElement('button');
-        // applicationsButton.classList.add('inline-block', 'bg-teal-600', 'text-white', 'px-6', 'py-2', 'rounded-lg', 'hover:bg-teal-700', 'transition', 'duration-300', 'w-full', 'sm:w-auto', 'ml-4');
-        // applicationsButton.textContent = 'View Applications';
-        //
-        // applicationsButton.addEventListener('click', () => {
-        //     viewApplications(jobId);
-        // });
+        
 
         buttonSection.appendChild(applicationsButton);
 
@@ -678,7 +631,7 @@ function editJobPosting(job, job_id) {
 }
 
 
-async function viewApplications(jobId) {
+async function viewApplications(job,jobId) {
   const displaySection = document.getElementById("display-section");
   displaySection.innerHTML = ""; // Clear the section
 
@@ -819,10 +772,11 @@ async function viewApplications(jobId) {
 
       // Handle confirm button
       modalBox.querySelector("#confirmModalBtn").onclick = () => {
-        const textareaValue = modalBox.querySelector("textarea").value;
-        console.log("Confirmed with text:", textareaValue);
-        alert(`Confirmed for ${app.user?.displayName} with message: ${textareaValue}`);
-        modalOverlay.classList.add("hidden"); // Close modal
+        // const textareaValue = modalBox.querySelector("textarea").value;
+        // console.log("Confirmed with text:", textareaValue);
+        // alert(`Confirmed for ${app.user?.displayName} with message: ${textareaValue}`);
+        // modalOverlay.classList.add("hidden"); // Close modal
+        createContract(modalBox,modalOverlay,job,app.user_id,jobId);
       };
 
       const rejectBtn = document.createElement("button");
@@ -992,7 +946,7 @@ function renderUserProfileTemplate(jobId) {
   backSection.appendChild(backBtn);
 
   backBtn.addEventListener('click', () =>{
-    viewApplications(jobId);
+    viewApplications(job = null,jobId);
   })
 
   // Append all sections
@@ -1014,3 +968,56 @@ function viewApplicantProfile(profile_id,jobId){
   getUserDetails(profile_id)
 
 }
+
+async function createContract(modalBox,modalOverlay,job,user_id,jobId){
+  const textareaValue = modalBox.querySelector("textarea").value;
+    
+    // Assuming the clientId, freelancerId, jobId are available in the app context or you can retrieve them from the modal
+    const clientId = job.client_id;  // Client ID from app context
+    const freelancerId = user_id;
+ 
+
+    if (!textareaValue || !clientId || !freelancerId || !jobId) {
+        alert("Please ensure all fields are filled in before confirming.");
+        return;
+    }
+
+    // Prepare the contract data to send
+    const contractData = {
+        client_id: clientId,
+        freelancer_id: freelancerId,
+        job_id: jobId,
+        contract_terms: textareaValue,
+        status: 'pending' // default status is 'pending'
+    };
+    console.log(contractData);
+    try {
+        // Send the POST request to the backend to create the contract
+        const response = await fetch(`${baseURL}/contracts/create-contract`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(contractData)
+        });
+
+        // Handle response
+        if (!response.ok) {
+            const errorData = await response.json();
+            alert(`Failed to create contract: ${errorData.message || 'Unknown error'}`);
+            return;
+        }
+
+        const result = await response.json();
+        console.log("Contract created successfully:", result);
+        
+        // Show success message and close modal
+        alert("Contract created successfully!");
+        modalOverlay.classList.add("hidden"); // Close modal
+    } catch (err) {
+        console.error("Error creating contract:", err);
+        alert("There was an error creating the contract. Please try again.");
+    }
+}
+
+

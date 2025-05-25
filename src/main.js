@@ -33,6 +33,7 @@ const jobRoutes = require('./routes/jobRoutes');
 const applicationRoutes = require('./routes/applicationsRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const contractRoutes = require('./routes/contractRoutes');
 
 
 app.use('/auth', userRoutes);
@@ -40,6 +41,7 @@ app.use('/job', jobRoutes);
 app.use('/dashboard', dashboardRoutes);
 app.use('/apply', applicationRoutes);
 app.use('/', paymentRoutes);
+app.use('/contracts', contractRoutes);
 
 // ===== LANDING PAGE AND AUTH ROUTES =====
 
@@ -90,9 +92,9 @@ app.get('/view-freelancer', (req,res) => {
 });
 
 // Render the job applicants page
-app.get('/view-applications', (req,res) => {
-  res.sendFile(path.join(__dirname,'../public/pages/jobapplicants.html'))
-});
+// app.get('/view-applications', (req,res) => {
+//   res.sendFile(path.join(__dirname,'../public/pages/jobapplicants.html'))
+// });
 
 // Render the job details page
 app.get('/job-details', (req,res) => {

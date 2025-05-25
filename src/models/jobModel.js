@@ -48,7 +48,24 @@ const JobSchema = new Schema({
     type: Number,
     required: true,
     min: 1,
-  }
+  },
+  milestones: [{
+    milestone_title: String,
+    description: String,
+    amount: {
+      type: Number,
+      min: 0
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'completed', 'cancelled'],
+      default: 'pending'
+    },
+    completed_at: {
+      type: Date,
+      default: null
+    }
+  }],
 }, {
   timestamps: true,
 });

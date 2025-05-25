@@ -140,6 +140,69 @@ document.addEventListener("DOMContentLoaded", () => {
         totalDuration.placeholder = 'e.g. 12';
         totalDuration.className = 'w-full border border-gray-300 p-2 rounded';
         article.appendChild(createField('Duration in Months*', totalDuration));
+
+        // New: Milestones Section
+        const milestonesSection = document.createElement('section');
+        milestonesSection.className = 'mb-4';
+        
+        const milestonesLabel = document.createElement('label');
+        milestonesLabel.className = 'block text-gray-700 font-semibold mb-2';
+        milestonesLabel.textContent = "Milestones*";
+        milestonesSection.appendChild(milestonesLabel);
+        
+        // Number of Milestones
+        const milestoneCountInput = document.createElement('input');
+        milestoneCountInput.type = 'number';
+        milestoneCountInput.id = 'milestoneCount';
+        milestoneCountInput.name = 'milestone_count';
+        milestoneCountInput.min = '1';
+        milestoneCountInput.placeholder = 'Number of Milestones';
+        milestoneCountInput.className = 'w-full border border-gray-300 p-2 rounded mb-4';
+        milestonesSection.appendChild(milestoneCountInput);
+
+        const milestoneFieldsContainer = document.createElement('div');
+        milestoneFieldsContainer.id = 'milestoneFieldsContainer';
+        milestonesSection.appendChild(milestoneFieldsContainer);
+
+        article.appendChild(milestonesSection);
+
+
+           // Update milestones UI
+            milestoneCountInput.addEventListener('input', () => {
+              const numberOfMilestones = parseInt(milestoneCountInput.value) || 0;
+              milestoneFieldsContainer.innerHTML = ''; // Clear current fields
+
+              for (let i = 0; i < numberOfMilestones; i++) {
+                const milestoneTitleInput = document.createElement('input');
+                milestoneTitleInput.type = 'text';
+                milestoneTitleInput.id = `milestoneTitle${i}`;
+                milestoneTitleInput.name = `milestone_title_${i}`;
+                milestoneTitleInput.placeholder = `Milestone ${i + 1} Title`;
+                milestoneTitleInput.className = 'w-full border border-gray-300 p-2 rounded mb-2';
+                
+                const milestoneDescriptionInput = document.createElement('textarea');
+                milestoneDescriptionInput.id = `milestoneDescription${i}`;
+                milestoneDescriptionInput.name = `milestone_description_${i}`;
+                milestoneDescriptionInput.placeholder = `Milestone ${i + 1} Description`;
+                milestoneDescriptionInput.className = 'w-full border border-gray-300 p-2 rounded mb-2';
+
+                const milestoneAmountInput = document.createElement('input');
+                milestoneAmountInput.type = 'number';
+                milestoneAmountInput.id = `milestoneAmount${i}`;
+                milestoneAmountInput.name = `milestone_amount_${i}`;
+                milestoneAmountInput.min = '0';
+                milestoneAmountInput.placeholder = `Milestone ${i + 1} Payment Amount`;
+                milestoneAmountInput.className = 'w-full border border-gray-300 p-2 rounded mb-4';
+
+                // Append each milestone input group
+                milestoneFieldsContainer.appendChild(milestoneTitleInput);
+                milestoneFieldsContainer.appendChild(milestoneDescriptionInput);
+                milestoneFieldsContainer.appendChild(milestoneAmountInput);
+              }
+            });
+
+
+
       
         // Submit Button
         const footer = document.createElement('footer');
