@@ -8,5 +8,46 @@
   <h1>✅ Payment Successful</h1>
   <p>Thank you! Your payment was processed successfully.</p>
   <a href="/client-home">Return to Dashboard</a>
+
+  <script type="module">
+
+    import getBaseUrl from '../scripts/base-url.mjs';
+
+    const baseURL = getBaseUrl();
+
+    const jobId = sessionStorage.getItem('job_id');
+    const jobTitle = sessionStorage.getItem('job_title');
+    const milestoneTitle = sessionStorage.getItem('milestone_title');
+
+  
+
+    // Check if data exists in sessionStorage
+    if (jobId && jobTitle && milestoneTitle) {
+        // Prepare the data to send in the request
+        const requestData = {
+            job_id: jobId,
+            job_title: jobTitle,
+            milestone_title: milestoneTitle,
+        };
+
+        // Send a PUT request to update the job payment status
+        fetch(`${baseURL}/job/update-payment/${jobId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Job payment updated successfully:', data);
+        })
+        .catch(error => {
+            console.error('Error updating job payment:', error);
+        });
+    } else {
+        console.log('Required data not found in sessionStorage.');
+    }
+  </script>
 </body>
 </html>

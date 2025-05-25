@@ -1098,7 +1098,6 @@ document.getElementById("view_current_jobs").addEventListener("click", async (ev
 });
 
 
-// Function to display a single job view
 function displaySingleJobView(job) {
     // Clear the display section
     document.getElementById("display-section").innerHTML = '';
@@ -1133,39 +1132,12 @@ function displaySingleJobView(job) {
                 <p><strong>Description:</strong> ${milestone.description}</p>
                 <p><strong>Amount:</strong> R${milestone.amount}</p>
                 <button id="payButton-${index}" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 mt-2">
-                    Pay
+                    Make Payment
                 </button>
             `;
 
-            // Add event listener to the Pay button
-           const payButton = milestoneElement.querySelector(`#payButton-${index}`);
-            payButton.textContent = 'Make Payment';
-            payButton.classList.add(
-            'inline-block', 'bg-green-600', 'text-white',
-            'px-6', 'py-2', 'rounded-lg', 'hover:bg-green-700',
-            'transition', 'duration-300', 'w-full', 'sm:w-auto'
-          );
-
-          payButton.addEventListener('click', async () => {
-            alert("clicked");
-            try {
-              const res = await fetch(`${baseURL}/create-checkout-session`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  job_title: job.job_title +" - "+ milestone.milestone_title,
-                  total_pay: milestone.amount
-                })
-              });
-              const { url } = await res.json();
-              window.location.href = url; // Redirect to Stripe Checkout
-            } catch (err) {
-              alert('Failed to redirect to payment page: ' + err.message);
-            }
-          });
-
-
-          milestonesContainer.appendChild(milestoneElement);
+            // Append the milestone element to the milestones container
+            milestonesContainer.appendChild(milestoneElement);
         });
     } else {
         milestonesContainer.innerHTML = "<p>No milestones available for this job.</p>";
@@ -1189,7 +1161,42 @@ function displaySingleJobView(job) {
         document.getElementById('client-page-heading').textContent = "View Current Jobs";
         await loadJobs(); // Re-fetch the job list and display it
     });
+
+    // Now that the job and buttons are rendered, we can add event listeners for all the Pay buttons
+    job.milestones.forEach((milestone, index) => {
+        const payButton = document.getElementById(`payButton-${index}`);
+
+        // Ensure the button exists before attaching the event listener
+        if (payButton) {
+            if(milestone.status == "completed"){
+              payButton.textContent = "Paid";
+              payButton.disabled = true;  
+              payButton.style.backgroundColor = "#d3d3d3";
+              payButton.style.cursor = "not-allowed"; 
+            }
+            payButton.addEventListener('click', async () => {
+                try {
+                    sessionStorage.setItem('job_id', job._id);
+                    sessionStorage.setItem('job_title', job.job_title);
+                    sessionStorage.setItem('milestone_title', milestone.milestone_title);
+                    const res = await fetch(`${baseURL}/create-checkout-session`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            job_title: job.job_title + " - " + milestone.milestone_title,
+                            total_pay: milestone.amount
+                        })
+                    });
+                    const { url } = await res.json();
+                    window.location.href = url; // Redirect to Stripe Checkout
+                } catch (err) {
+                    alert('Failed to redirect to payment page: ' + err.message);
+                }
+            });
+        }
+    });
 }
+
 
 
 async function loadJobs() {
@@ -1237,17 +1244,20 @@ async function loadJobs() {
 // Handle contracts
 document.getElementById("view_contracts").addEventListener("click", async (event) => {
     event.preventDefault();
+    showContracts(); // Call the reusable function
+});
+
+async function showContracts() {
     document.getElementById('client-page-heading').textContent = "View Contracts";
-    document.getElementById("display-section").innerHTML = ''; // Clear the display section
-    
+    document.getElementById("display-section").innerHTML = '';
+
     try {
         const userid = sessionStorage.getItem('firebaseId');
 
         const response = await fetch(`${baseURL}/contracts/get-all-client-contracts/${userid}`);
-  
         if (!response.ok) throw new Error('Failed to fetch contracts');
-  
-        const contracts = await response.json(); // Assuming the response is a list of contracts
+
+        const contracts = await response.json();
 
         if (contracts.length === 0) {
             document.getElementById("display-section").innerHTML = "You have no contracts to display.";
@@ -1255,9 +1265,6 @@ document.getElementById("view_contracts").addEventListener("click", async (event
         }
 
         contracts.forEach((contract) => {
-            console.log(contract); // Log each contract to the console (or process them as needed)
-
-            // Example: Create a contract card and append it to the display section
             const contractElement = document.createElement('section');
             contractElement.classList.add('contract-card', 'mb-4', 'p-4', 'bg-gray-300', 'rounded-lg');
             
@@ -1269,33 +1276,33 @@ document.getElementById("view_contracts").addEventListener("click", async (event
             `;
 
             contractElement.addEventListener('click', () => {
-              showContractDetails(contract); // Call the function to show contract details
+                showContractDetails(contract); // Open contract detail view
             });
 
             document.getElementById("display-section").appendChild(contractElement);
         });
+
     } catch (error) {
         console.error('Error loading contracts:', error);
     }
-});
+}
 
 function showContractDetails(contract) {
-    document.getElementById('client-page-heading').textContent = "Contract Details"; // Change the heading
-    document.getElementById("display-section").innerHTML = ''; // Clear the display section
-    
-    // Render detailed contract view
+    document.getElementById('client-page-heading').textContent = "Contract Details";
+    document.getElementById("display-section").innerHTML = '';
+
     const contractDetailElement = document.createElement('section');
     contractDetailElement.classList.add('contract-detail', 'p-8', 'bg-white', 'rounded-lg', 'shadow-lg', 'max-w-3xl', 'mx-auto');
-    
+
     contractDetailElement.innerHTML = `
         <h2 class="text-3xl font-bold text-gray-800 mb-4">${contract.job_title}</h2>
-        
+
         <section class="mb-6">
             <p class="text-lg font-semibold text-gray-700"><strong>Status:</strong> 
                 <span class="${contract.status === 'accepted' ? 'text-green-500' : 'text-red-500'}">${contract.status}</span>
             </p>
         </section>
-        
+
         <section class="mb-6">
             <p class="text-lg font-semibold text-gray-700"><strong>Freelancer:</strong> ${contract.freelancer_name}</p>
         </section>
@@ -1303,7 +1310,7 @@ function showContractDetails(contract) {
         <section class="mb-6">
             <p class="text-lg font-semibold text-gray-700"><strong>Client:</strong> ${contract.client_name}</p>
         </section>
-        
+
         <section class="mb-6">
             <p class="text-lg font-semibold text-gray-700"><strong>Contract Terms:</strong></p>
             <p class="text-gray-600 mt-2">${contract.contract_terms}</p>
@@ -1330,83 +1337,90 @@ function showContractDetails(contract) {
             <p class="text-lg font-semibold text-gray-700"><strong>Updated At:</strong> ${new Date(contract.updatedAt).toLocaleString()}</p>
         </section>
 
-          <!-- Back Button -->
         <section class="mt-8 text-center">
             <button 
                 class="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none"
-                onclick="window.history.back()">
+                id="backToContractsBtn">
                 Back
             </button>
         </section>
     `;
-    
+
     document.getElementById("display-section").appendChild(contractDetailElement);
+
+    // Back button logic to return to contract list
+    document.getElementById('backToContractsBtn').addEventListener('click', () => {
+        showContracts();
+    });
 }
 
 
-//handle dashboard
 document.getElementById("view_dashboard").addEventListener("click", async function showAnalysisDetails(event) {
     event.preventDefault();
-    
-    // Get client ID from sessionStorage
-    const clientId = sessionStorage.getItem('firebaseId'); // Replace with the actual client ID (you can get it dynamically, e.g., from the logged-in user)
-    
+
+    const clientId = sessionStorage.getItem('firebaseId');
     if (!clientId) {
         console.error("Client ID not found.");
         alert("Client is not logged in.");
         return;
     }
 
-    // Change the page heading
-    document.getElementById('client-page-heading').textContent = "Analysis Details"; 
-    
-    // Clear the display section before appending new content
+    document.getElementById('client-page-heading').textContent = "Analysis Details";
     document.getElementById("display-section").innerHTML = ''; 
 
-    // Show loading indicator while data is being fetched
     const loadingMessage = document.createElement('section');
     loadingMessage.classList.add('p-6', 'bg-blue-100', 'rounded-lg', 'text-blue-800', 'text-center');
     loadingMessage.textContent = 'Loading analysis data, please wait...';
     document.getElementById("display-section").appendChild(loadingMessage);
 
     try {
-        // Fetch analysis data from the backend
         const res = await fetch(`${baseURL}/dashboard/client-analysis/${clientId}`);
-        
-        // Check if the response is okay
-        if (!res.ok) {
-            throw new Error('Failed to fetch analysis data');
-        }
+        if (!res.ok) throw new Error('Failed to fetch analysis data');
 
-        // Parse the response data
         const analysisData = await res.json();
-
-        // If no data is returned or the data is incomplete
         if (!analysisData || Object.keys(analysisData).length === 0) {
             throw new Error('No analysis data found for this client.');
         }
-        
-        // Remove loading message and proceed to display the data
+
         loadingMessage.remove();
 
-        // Create a container to hold the analysis details
         const analysisContainer = document.createElement('section');
         analysisContainer.classList.add('analysis-container', 'p-6', 'bg-white', 'rounded-lg', 'shadow-lg');
 
-        // Add the statistics to the container
+        // Store this text for PDF generation later
+        const pdfText = `
+Client Analysis
+
+Total Applications: ${analysisData.totalApplications}
+Total Money Paid: R${analysisData.totalMoneyPaid.toLocaleString()}
+Total Jobs Posted: ${analysisData.totalJobsPosted}
+Average Applications per Job: ${analysisData.averageApplicationsPerJob}
+        `;
+
         analysisContainer.innerHTML = `
             <h3 class="text-2xl font-bold mb-4">Client Analysis</h3>
             <p><strong>Total Applications:</strong> ${analysisData.totalApplications}</p>
             <p><strong>Total Money Paid:</strong> R${analysisData.totalMoneyPaid.toLocaleString()}</p>
             <p><strong>Total Jobs Posted:</strong> ${analysisData.totalJobsPosted}</p>
             <p><strong>Average Applications per Job:</strong> ${analysisData.averageApplicationsPerJob}</p>
+            <button id="downloadPdfBtn" class="mt-6 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition duration-300">
+                Download PDF
+            </button>
         `;
 
-        // Append the analysis container to the display section
         document.getElementById("display-section").appendChild(analysisContainer);
+
+        // Add PDF generation logic
+        document.getElementById('downloadPdfBtn').addEventListener('click', async () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.setFontSize(12);
+            doc.text(pdfText, 10, 20);
+            doc.save("client-analysis.pdf");
+        });
+
     } catch (error) {
         console.error('Error fetching analysis data:', error);
-        // Remove the loading message and show an error message if data fetch fails
         loadingMessage.remove();
 
         const errorMessage = document.createElement('section');
@@ -1415,5 +1429,6 @@ document.getElementById("view_dashboard").addEventListener("click", async functi
         document.getElementById("display-section").appendChild(errorMessage);
     }
 });
+
 
 

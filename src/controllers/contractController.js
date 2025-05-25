@@ -69,6 +69,7 @@ const getContract = async (req, res) => {
 const getAllFreelancerContracts = async (req, res) => {
      try {
         const { freelancerId } = req.params;
+        console.log(freelancerId);
 
         if (!freelancerId) {
             return res.status(400).json({ message: "Freelancer ID is required" });
@@ -122,6 +123,7 @@ const getAllClientsContracts = async (req, res) => {
     
      try {
         const { clientId } = req.params;
+        console.log(clientId);
 
         if (!clientId) {
             return res.status(400).json({ message: "Client ID is required" });

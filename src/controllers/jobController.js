@@ -375,4 +375,44 @@ const allFreelancerTakenJobs = async (req, res) => {
 };
 
 
-module.exports = {addJob, removeJob, singleJob, allJobs, allJobsByUser , setIsHidden, updateJob,getClientId , allTakenJobs, allFreelancerTakenJobs};
+const updatePayment = async (req,res) => {
+    try {
+        const { jobId } = req.params;          // Get job_id from URL parameter
+        const { milestone_title } = req.body;  // Get the milestone_title and payment_status from the request body
+
+        console.log(req.body);
+        // Step 1: Find the Job by job_id
+        const job = await Job.findById(jobId);
+        if (!job) {
+            return res.status(404).json({ message: 'Job not found' });
+        }
+
+        // Step 2: Find the specific milestone within the job
+        const milestone = job.milestones.find(milestone => milestone.milestone_title === milestone_title);
+
+        if (!milestone) {
+            return res.status(404).json({ message: 'Milestone not found' });
+        }
+
+        // Step 3: Update the milestone status to 'completed'
+        milestone.status = 'completed';
+        milestone.completed_at = new Date();  // Set the completed timestamp
+
+        // Step 4: Save the job with the updated milestone
+        await job.save();
+
+        // Step 5: Return a success response
+        return res.status(200).json({
+            message: 'Milestone payment status updated successfully',
+            job,
+        });
+
+    } catch (error) {
+        console.error('Error updating milestone payment:', error);
+        return res.status(500).json({ message: 'Error updating milestone payment status' });
+    }
+
+};
+
+
+module.exports = {addJob, removeJob, singleJob, allJobs, allJobsByUser , setIsHidden, updateJob,getClientId , allTakenJobs, allFreelancerTakenJobs, updatePayment};

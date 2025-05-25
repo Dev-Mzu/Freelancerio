@@ -248,6 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
           };
 
             // Collect milestones data
+            let total = 0;
             const numberOfMilestones = parseInt(milestoneCountInput.value) || 0;
             for (let i = 0; i < numberOfMilestones; i++) {
                 const milestoneTitle = document.getElementById(`milestoneTitle${i}`).value.trim();
@@ -255,6 +256,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const milestoneAmount = parseFloat(document.getElementById(`milestoneAmount${i}`).value);
 
                 if (milestoneTitle && milestoneDescription && !isNaN(milestoneAmount) && milestoneAmount > 0) {
+                  total += milestoneAmount;
                     formData.milestones.push({
                         milestone_title: milestoneTitle,
                         description: milestoneDescription,
@@ -264,6 +266,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 } else {
                     throw new Error(`Please fill in all fields for Milestone ${i + 1}`);
                 }
+            }
+
+            if(total != totalPay){
+              alert("THe milestone payment does not correspond to the total amount");
+              return;
             }
 
           // Validate required fields

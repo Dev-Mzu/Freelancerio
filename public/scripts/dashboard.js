@@ -24,7 +24,7 @@ async function loadUsers() {
   usersCache = await res.json();
   const table = document.getElementById("users-table");
   table.innerHTML = `
-    <thead><tr><th>ID</th><th>Username</th><th>Role</th></tr></thead>
+    <thead><tr><th>ID</th><th>Tdird Party Name</th><th>Role</th></tr></thead>
     <tbody>
       ${usersCache.map(u => `<tr><td>${u.id_from_third_party}</td><td>${u.third_party_name}</td><td>${u.role}</td></tr>`).join('')}
     </tbody>
