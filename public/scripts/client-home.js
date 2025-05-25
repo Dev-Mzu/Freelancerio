@@ -218,9 +218,9 @@ document.addEventListener("DOMContentLoaded", () => {
         displaySection.appendChild(article);
 
         const btnSubmit = document.getElementById("jpostJobBtn");
-  let uid = sessionStorage.getItem('firebaseId');
+      let uid = sessionStorage.getItem('firebaseId');
 
-  btnSubmit.addEventListener('click', async (e) => {
+      btnSubmit.addEventListener('click', async (e) => {
       e.preventDefault();
       
       // Disable button during submission
@@ -243,8 +243,28 @@ document.addEventListener("DOMContentLoaded", () => {
               location_category: document.getElementById("locationCategory").value,
               duration_months: parseInt(document.getElementById("totalDuration").value),
               total_pay: totalPay,
-              taken_status: false
+              taken_status: false,
+              milestones: []
           };
+
+            // Collect milestones data
+            const numberOfMilestones = parseInt(milestoneCountInput.value) || 0;
+            for (let i = 0; i < numberOfMilestones; i++) {
+                const milestoneTitle = document.getElementById(`milestoneTitle${i}`).value.trim();
+                const milestoneDescription = document.getElementById(`milestoneDescription${i}`).value.trim();
+                const milestoneAmount = parseFloat(document.getElementById(`milestoneAmount${i}`).value);
+
+                if (milestoneTitle && milestoneDescription && !isNaN(milestoneAmount) && milestoneAmount > 0) {
+                    formData.milestones.push({
+                        milestone_title: milestoneTitle,
+                        description: milestoneDescription,
+                        amount: milestoneAmount,
+                        status: 'pending'
+                    });
+                } else {
+                    throw new Error(`Please fill in all fields for Milestone ${i + 1}`);
+                }
+            }
 
           // Validate required fields
           if (!formData.job_title || !formData.job_description || !formData.job_requirements || !formData.job_category) {
@@ -280,6 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
           document.getElementById("totalPay").value = "";
           document.getElementById("locationCategory").value = "";
           document.getElementById("totalDuration").value = "";
+          document.getElementById("milestoneCount").value = "";
 
       } catch (err) {
           console.error("Job posting failed:", err);

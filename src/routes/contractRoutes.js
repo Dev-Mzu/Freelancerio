@@ -6,8 +6,8 @@ const { createContract, getContract, getAllFreelancerContracts, getAllClientsCon
 // Contract routes
 router.post('/create-contract',createContract);
 router.get('/get-contract/:contractId',getContract);
-router.get('/get-all-freelancer-contracts/:userId',getAllFreelancerContracts);
-router.get('/get-all-client-contracts/:userId', getAllClientsContracts);
+router.get('/get-all-freelancer-contracts/:freelancerId',getAllFreelancerContracts);
+router.get('/get-all-client-contracts/:clientId', getAllClientsContracts);
 router.put('/accept-contract/:contractId',AcceptContract);
 router.put('/reject-contract/:contractId',RejectContract);
 

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Update your freelancer profile information">
+  <title>Freelancer Profile Update</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen flex flex-col">
+  <header class="bg-white shadow-sm">
+    <nav class="max-w-7xl mx-auto px-4 py-3" aria-label="Main navigation">
+      <ul class="flex space-x-6 items-center">
+        <li><a href="/freelancer-home" id="user-name">Welcome John</a></li>
+        <li><a href="/freelancer-home" class="hover:text-blue-600 transition-colors">Jobs</a></li>
+        <li><a href="/profile-user" class="hover:text-blue-600 transition-colors">Profile</a></li>
+        <li><a href="/freelancer-dashboard" class="font-medium text-blue-600 hover:text-blue-700 transition-colors" aria-current="page">Dashboard</a></li>
+        <li><a href="/" class="hover:text-blue-600 transition-colors">Logout</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- New Navigation Section Below -->
+  <nav class="bg-white shadow-md mt-4">
+    <ul class="flex justify-center space-x-8 py-4">
+      <li><a href="#" id="view-applications" class="text-blue-600 hover:text-blue-800">Applications</a></li>
+      <li><a href="#" id="view-contracts" class="text-blue-600 hover:text-blue-800">Contracts</a></li>
+      <li><a href="#" id="view-jobs" class="text-blue-600 hover:text-blue-800">Jobs</a></li>
+      <li><a href="#" id="view-analysis" class="text-blue-600 hover:text-blue-800">Analysis</a></li>
+    </ul>
+  </nav>
+
+  <main class="flex-grow max-w-4xl mx-auto my-8 px-4 w-full">
+    <!-- Dynamic Content will be injected here -->
+    <section id="main-content">
+      <h2 class="text-2xl font-semibold text-gray-800">Welcome to your dashboard, John!</h2>
+      <p class="text-gray-600 mt-2">Choose an option from the navigation above to view your data.</p>
+    </section>
+  </main>
+
+  <footer class="bg-gray-100 text-center py-6 mt-12">
+    <p class="text-gray-600">&copy; 2025 Freelancerio. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // Base URL for API calls
+    const baseURL = 'http://localhost:3000'; // replace with your actual backend URL
+    const userId = sessionStorage.getItem('firebaseId'); // assuming firebaseId is used for identification
+
+    // Main content section
+    const mainContent = document.getElementById('main-content');
+
+    // Fetch Applications
+async function fetchApplications() {
+  try {
+    const response = await fetch(`${baseURL}/apply/get-applications/${userId}`);
+    const applications = await response.json();
+    if (applications.length === 0) {
+      mainContent.innerHTML = "<p class='text-gray-600'>You have no applications yet.</p>";
+    } else {
+      mainContent.innerHTML = `
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4">Your Applications</h2>
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          ${applications.map(app => `
+            <section class="application-card p-6 bg-gray-300 rounded-lg shadow-md">
+              <h3 class="text-xl font-semibold text-gray-800">${app.job_title}</h3>
+              <p class="text-gray-700">Client: <strong>${app.client_name}</strong></p>
+              <section class="mt-4">
+                <span class="status-btn ${getStatusClass(app.status)}">${getStatusText(app.status)}</span>
+              </section>
+            </section>
+          `).join('')}
+        </section>
+      `;
+    }
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    mainContent.innerHTML = "<p class='text-red-500'>Failed to load applications.</p>";
+  }
+}
+
+// Function to get status class based on the application status
+function getStatusClass(status) {
+  switch (status.toLowerCase()) {
+    case 'accepted':
+      return 'bg-green-500 p-3 rounded-lg text-white'; // Green for accepted
+    case 'rejected':
+      return 'bg-red-500 p-3 rounded-lg text-white'; // Red for rejected
+    case 'applied':
+      return 'bg-yellow-500 p-3 rounded-lg text-white'; // Yellow for applied
+    default:
+      return 'bg-gray-500 p-3 rounded-lg  text-white'; // Default gray if status is unknown
+  }
+}
+
+// Function to get status text based on the application status
+function getStatusText(status) {
+  switch (status.toLowerCase()) {
+    case 'accepted':
+      return 'Accepted';
+    case 'rejected':
+      return 'Rejected';
+    case 'applied':
+      return 'Applied';
+    default:
+      return 'Unknown';
+  }
+}
+
+
+    // Fetch Contracts
+
+// Function to fetch and display contracts
+async function fetchContracts() {
+    mainContent.innerHTML = '';
+  try {
+    const response = await fetch(`${baseURL}/contracts/get-all-freelancer-contracts/${userId}`);
+    const contracts = await response.json();
+
+    if (contracts.length === 0) {
+      mainContent.innerHTML = "<p class='text-gray-600'>You have no contracts yet.</p>";
+    } else {
+      contracts.forEach((contract) => {
+        console.log(contract); // Log each contract to the console (or process them as needed)
+
+        // Create a contract card and append it to the display section
+        const contractElement = document.createElement('section');
+        contractElement.classList.add('contract-card', 'mb-4', 'p-4', 'bg-gray-300', 'rounded-lg');
+
+        contractElement.innerHTML = `
+          <h3 class="font-semibold text-xl">${contract.job_title}</h3>
+          <p>Status: <strong>${contract.status}</strong></p>
+          <p>Freelancer: ${contract.freelancer_name}</p>
+          <p>Contract Terms: ${contract.contract_terms.length > 30 ? contract.contract_terms.slice(0, 30) + '...' : contract.contract_terms}</p>
+        `;
+
+        // Add an event listener to show contract details when the card is clicked
+        contractElement.addEventListener('click', () => {
+          showContractDetails(contract); // Call the function to show contract details
+        });
+
+        // Append the contract card to the main content
+        mainContent.appendChild(contractElement);
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching contracts:", error);
+    mainContent.innerHTML = "<p class='text-red-500'>Failed to load contracts.</p>";
+  }
+}
+
+function showContractDetails(contract) {
+  // Clear the display section
+  mainContent.innerHTML = '';
+
+  // Create a new element for the contract details
+  const contractDetailElement = document.createElement('section');
+  contractDetailElement.classList.add('contract-detail', 'p-6', 'bg-white', 'rounded-lg', 'shadow-lg');
+
+  contractDetailElement.innerHTML = `
+    <h2 class="text-3xl font-bold text-gray-800 mb-4">${contract.job_title}</h2>
+    
+    <section class="mb-6">
+        <p class="text-lg font-semibold text-gray-700"><strong>Status:</strong> 
+            <span class="${contract.status === 'accepted' ? 'text-green-500' : 'text-red-500'}">${contract.status}</span>
+        </p>
+    </section>
+
+    <section class="mb-6">
+        <p class="text-lg font-semibold text-gray-700"><strong>Freelancer:</strong> ${contract.freelancer_name}</p>
+    </section>
+
+    <section class="mb-6">
+        <p class="text-lg font-semibold text-gray-700"><strong>Client:</strong> ${contract.client_name}</p>
+    </section>
+
+    <section class="mb-6">
+        <p class="text-lg font-semibold text-gray-700"><strong>Contract Terms:</strong></p>
+        <p class="text-gray-600 mt-2">${contract.contract_terms}</p>
+    </section>
+
+    <section class="mb-6">
+        <p class="text-lg font-semibold text-gray-700"><strong>Job Description:</strong></p>
+        <p class="text-gray-600 mt-2">${contract.job.job_description}</p>
+    </section>
+
+    <section class="mb-6">
+        <p class="text-lg font-semibold text-gray-700"><strong>Job Pay:</strong> R${contract.job.total_pay}</p>
+    </section>
+
+    <section class="mb-6">
+        <p class="text-lg font-semibold text-gray-700"><strong>Duration:</strong> ${contract.job.duration_months} months</p>
+    </section>
+
+    <section class="mb-6">
+        <p class="text-lg font-semibold text-gray-700"><strong>Created At:</strong> ${new Date(contract.createdAt).toLocaleString()}</p>
+    </section>
+
+    <section class="mb-6">
+        <p class="text-lg font-semibold text-gray-700"><strong>Updated At:</strong> ${new Date(contract.updatedAt).toLocaleString()}</p>
+    </section>
+
+    <!-- Action buttons -->
+    <section class="flex space-x-4 mt-6">
+      <button id="acceptButton" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600" ${contract.status === 'accepted' ? 'disabled' : ''}>
+        ${contract.status === 'accepted' ? 'Accepted' : 'Accept'}
+      </button>
+      <button id="rejectButton" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600" ${contract.status === 'rejected' ? 'disabled' : ''}>
+        ${contract.status === 'rejected' ? 'Rejected' : 'Reject'}
+      </button>
+      <button id="backButton" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+        Back to Contracts
+      </button>
+    </section>
+  `;
+
+  // Add event listeners for Accept, Reject, and Back buttons
+  const acceptButton = contractDetailElement.querySelector('#acceptButton');
+  const rejectButton = contractDetailElement.querySelector('#rejectButton');
+  const backButton = contractDetailElement.querySelector('#backButton');
+
+  // Accept button functionality (sending PUT request)
+  acceptButton.addEventListener('click', async () => {
+    try {
+      const response = await fetch(`${baseURL}/contracts/accept-contract/${contract._id}`, {
+        method: 'PUT',
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        alert('Contract accepted successfully!');
+        fetchContracts(contract.client_id); // Fetch the updated contracts list
+      } else {
+        alert(`Failed to accept contract: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error accepting contract:', error);
+      alert('Failed to accept contract. Please try again.');
+    }
+  });
+
+  // Reject button functionality (send PUT request for rejection)
+  rejectButton.addEventListener('click', async () => {
+    try {
+      const response = await fetch(`${baseURL}/contracts/reject-contract/${contract._id}`, {
+        method: 'PUT',
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        alert('Contract rejected successfully!');
+        fetchContracts(contract.client_id); // Fetch the updated contracts list
+      } else {
+        alert(`Failed to reject contract: ${result.message}`);
+      }
+    } catch (error) {
+      console.error('Error rejecting contract:', error);
+      alert('Failed to reject contract. Please try again.');
+    }
+  });
+
+  // Back button functionality
+  backButton.addEventListener('click', () => {
+    fetchContracts(contract.client_id); // Fetch the contracts again for the same client
+  });
+
+  // Append the contract details to the main content
+  mainContent.appendChild(contractDetailElement);
+}
+
+
+
+    // Fetch Jobs
+    // Fetch Jobs
+async function fetchJobs() {
+    mainContent.innerHTML = ''; // Clear the main content section
+    
+    try {
+        // Fetch the jobs with taken_status = true for the user
+        const response = await fetch(`${baseURL}/job/taken-freelancer-jobs/${userId}`);
+
+        if (!response.ok) throw new Error('Failed to fetch jobs');
+
+        const jobs = await response.json(); // Assuming the response is a list of jobs
+
+        if (jobs.length === 0) {
+            mainContent.innerHTML = "You have no current jobs.";
+            return;
+        }
+
+        jobs.forEach((job) => {
+            console.log(job); // Log each job to the console (or process them as needed)
+
+            // Create a job card and append it to the main content section
+            const jobElement = document.createElement('section');
+            jobElement.classList.add('job-card', 'mb-4', 'p-4', 'bg-gray-300', 'rounded-lg');
+            
+            jobElement.innerHTML = `
+                <h3 class="font-semibold text-xl">${job.job_title}</h3>
+                <p>Status: <strong>${job.taken_status ? 'Taken' : 'Available'}</strong></p>
+                <p>Company: ${job.company}</p>
+                <p>Job Description: ${job.job_description.length > 30 ? job.job_description.slice(0, 30) + '...' : job.job_description}</p>
+                <p>Total Pay: $${job.total_pay}</p>
+                <p>Duration: ${job.duration_months} months</p>
+            `;
+
+            // Add click event listener to show the single job view when clicked
+            jobElement.addEventListener('click', () => {
+                displaySingleJobView(job);
+            });
+
+            // Append the job card to the main content
+            mainContent.appendChild(jobElement);
+        });
+    } catch (error) {
+        console.error('Error loading jobs:', error);
+    }
+}
+
+// Function to display a single job view
+function displaySingleJobView(job) {
+    // Clear the main content section
+    mainContent.innerHTML = '';
+
+    // Create a detailed job view element
+    const jobDetailElement = document.createElement('section');
+    jobDetailElement.classList.add('job-detail', 'p-6', 'bg-white', 'rounded-lg', 'shadow-lg');
+
+    // Add Job details
+    jobDetailElement.innerHTML = `
+        <h2 class="text-3xl font-bold text-gray-800 mb-4">${job.job_title}</h2>
+        <p><strong>Status:</strong> ${job.taken_status ? 'Taken' : 'Available'}</p>
+        <p><strong>Company:</strong> ${job.company}</p>
+        <p><strong>Job Description:</strong> ${job.job_description}</p>
+        <p><strong>Total Pay:</strong> R${job.total_pay}</p>
+        <p><strong>Duration:</strong> ${job.duration_months} months</p>
+        <p><strong>Posted On:</strong> ${new Date(job.createdAt).toLocaleDateString()}</p>
+        <h3 class="text-xl font-bold mt-6">Milestones</h3>
+    `;
+
+    // Display Milestones
+    const milestonesContainer = document.createElement('div');
+    milestonesContainer.classList.add('milestones-container', 'mt-4');
+
+    if (job.milestones && job.milestones.length > 0) {
+        job.milestones.forEach((milestone, index) => {
+            const milestoneElement = document.createElement('section');
+            milestoneElement.classList.add('milestone-item', 'p-4', 'bg-gray-100', 'rounded-lg', 'mb-4');
+            
+            milestoneElement.innerHTML = `
+                <h4 class="font-semibold text-lg">Milestone ${index + 1}: ${milestone.title}</h4>
+                <p><strong>Description:</strong> ${milestone.description}</p>
+                <p><strong>Amount:</strong> R${milestone.amount}</p>
+                <p><strong>Status:</strong> Payment Pending</p>
+            `;
+
+            milestonesContainer.appendChild(milestoneElement);
+        });
+    } else {
+        milestonesContainer.innerHTML = "<p>No milestones available for this job.</p>";
+    }
+
+    jobDetailElement.appendChild(milestonesContainer);
+
+    // Add the back button
+    jobDetailElement.innerHTML += `
+        <button id="backButton" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 mt-6">
+            Back to Jobs
+        </button>
+    `;
+
+    // Append the detailed job view to the main content
+    mainContent.appendChild(jobDetailElement);
+
+    // Add event listener for the back button to return to the jobs listing
+    document.getElementById('backButton').addEventListener('click', async () => {
+        mainContent.innerHTML = ''; // Clear current view
+        await fetchJobs(); // Re-fetch the job list and display it
+    });
+}
+
+
+    // Fetch Analysis
+    async function fetchAnalysis() {
+      try {
+        const response = await fetch(`${baseURL}/analysis/${userId}`);
+        const analysis = await response.json();
+        if (!analysis) {
+          mainContent.innerHTML = "<p class='text-gray-600'>No analysis data available.</p>";
+        } else {
+          mainContent.innerHTML = `
+            <h2 class="text-2xl font-semibold text-gray-800">Your Analysis</h2>
+            <ul class="list-disc pl-5 mt-4">
+              <li class="text-gray-700">Total Earnings: R${analysis.totalEarnings}</li>
+              <li class="text-gray-700">Total Jobs Accepted: ${analysis.totalJobsAccepted}</li>
+              <li class="text-gray-700">Average Job Rating: ${analysis.averageRating}</li>
+            </ul>
+          `;
+        }
+      } catch (error) {
+        console.error("Error fetching analysis:", error);
+        mainContent.innerHTML = "<p class='text-red-500'>Failed to load analysis.</p>";
+      }
+    }
+
+    // Event listeners for navigation
+    document.getElementById('view-applications').addEventListener('click', fetchApplications);
+    document.getElementById('view-contracts').addEventListener('click', fetchContracts);
+    document.getElementById('view-jobs').addEventListener('click', fetchJobs);
+    document.getElementById('view-analysis').addEventListener('click', fetchAnalysis);
+
+  </script>
+</body>
+
+</html>

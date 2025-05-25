@@ -86,6 +86,16 @@ app.get('/client-jobs', (req,res) => {
   res.sendFile(path.join(__dirname,'../public/pages/client-home.html'))
 });
 
+// Render the client current jobs page
+app.get('/client-current-jobs', (req,res) => {
+  res.sendFile(path.join(__dirname,'../public/pages/client-home.html'))
+});
+
+// Render the client job contracts page
+app.get('/client-contracts', (req,res) => {
+  res.sendFile(path.join(__dirname,'../public/pages/client-home.html'))
+});
+
 // Render the view freelancer page
 app.get('/view-freelancer', (req,res) => {
   res.sendFile(path.join(__dirname,'../public/pages/client-home.html'))
@@ -107,8 +117,8 @@ app.get('/freelancer-home', (req, res) => {
 });
 
 // Render the user dashboard
-app.get('/user-dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/pages/user-dashboard.html'));
+app.get('/freelancer-dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/pages/freelancer-dashboard.html'));
 });
 
 // Render the client dashboard

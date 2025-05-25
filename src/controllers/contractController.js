@@ -1,6 +1,7 @@
 const admin = require('../firebase/firebase.js');
 const Contract = require('../models/contractModel');
 const JobApplication = require('../models/applicationModel');
+const Job = require('../models/jobModel');
 
 const createContract = async (req, res) => {
     try {
@@ -80,7 +81,36 @@ const getAllFreelancerContracts = async (req, res) => {
             return res.status(404).json({ message: "No contracts found for this freelancer" });
         }
 
-        return res.status(200).json({ contracts });
+         // Fetch freelancer details from Firebase for each contract
+        const contractsWithDetails = await Promise.all(
+            contracts.map(async (contract) => {
+                // Get freelancer details from Firebase
+                const freelancer = await admin.auth().getUser(contract.freelancer_id);
+
+                // Get client details from Firebase
+                const client = await admin.auth().getUser(contract.client_id);
+
+                // Get job details using job_id
+                const job = await Job.findById(contract.job_id);
+
+                if (!job) {
+                    throw new Error(`Job with ID ${contract.job_id} not found`);
+                }
+
+                // Add all the details to the contract object
+                return {
+                    ...contract.toObject(), // Spread contract details
+                    freelancer_name: freelancer.displayName,
+                    freelancer_email: freelancer.email,
+                    client_name: client.displayName,
+                    client_email: client.email,
+                    job_title: job.job_title,
+                    job:job
+                };
+            })
+        );
+
+        return res.status(200).json(contractsWithDetails); 
     } catch (err) {
         console.error("Error fetching freelancer contracts:", err);
         return res.status(500).json({ message: "Failed to fetch freelancer contracts" });
@@ -89,6 +119,7 @@ const getAllFreelancerContracts = async (req, res) => {
 }
 
 const getAllClientsContracts = async (req, res) => {
+    
      try {
         const { clientId } = req.params;
 
@@ -103,7 +134,38 @@ const getAllClientsContracts = async (req, res) => {
             return res.status(404).json({ message: "No contracts found for this client" });
         }
 
-        return res.status(200).json({ contracts });
+         // Fetch freelancer details from Firebase for each contract
+        const contractsWithDetails = await Promise.all(
+            contracts.map(async (contract) => {
+                // Get freelancer details from Firebase
+                const freelancer = await admin.auth().getUser(contract.freelancer_id);
+
+                // Get client details from Firebase
+                const client = await admin.auth().getUser(contract.client_id);
+
+                // Get job details using job_id
+                const job = await Job.findById(contract.job_id);
+
+                if (!job) {
+                    throw new Error(`Job with ID ${contract.job_id} not found`);
+                }
+
+                // Add all the details to the contract object
+                return {
+                    ...contract.toObject(), // Spread contract details
+                    freelancer_name: freelancer.displayName,
+                    freelancer_email: freelancer.email,
+                    client_name: client.displayName,
+                    client_email: client.email,
+                    job_title: job.job_title,
+                    job:job
+                };
+            })
+        );
+
+        return res.status(200).json(contractsWithDetails); 
+      
+       // return res.status(200).json(contracts); 
     } catch (err) {
         console.error("Error fetching client contracts:", err);
         return res.status(500).json({ message: "Failed to fetch client contracts" });
@@ -126,7 +188,16 @@ const AcceptContract = async (req, res) => {
         }
 
         contract.status = 'accepted';
+
+        const job = await Job.findById(contract.job_id);  // Assuming job_id is stored in the contract
+        if (!job) {
+            return res.status(404).json({ message: "Job not found" });
+        }
+
+        job.taken_status = true; 
+
         await contract.save();
+        await job.save();
 
         return res.status(200).json({ message: "Contract accepted successfully", contract });
     } catch (err) {
@@ -135,7 +206,6 @@ const AcceptContract = async (req, res) => {
     }
 
 }
-
 const RejectContract = async (req, res) => {
     try {
         const { contractId } = req.params;
@@ -151,14 +221,29 @@ const RejectContract = async (req, res) => {
         }
 
         contract.status = 'declined';
+
+        const job = await Job.findById(contract.job_id);  
+        if (!job) {
+            return res.status(404).json({ message: "Job not found" });
+        }
+
+        job.taken_status = false; 
+
         await contract.save();
+        await job.save();
+
+        // Use job._id instead of job_id
+        await JobApplication.updateMany(
+            { job_id: job._id }, // Find all applications for the given job
+            { $set: { status: 'applied' } } // Set the status to 'applied'
+        );
 
         return res.status(200).json({ message: "Contract rejected successfully", contract });
     } catch (err) {
         console.error("Error rejecting contract:", err);
         return res.status(500).json({ message: "Failed to reject contract" });
     }
-
 }
+
 
 module.exports = { createContract, getContract, getAllFreelancerContracts, getAllClientsContracts, AcceptContract, RejectContract};

@@ -1,4 +1,6 @@
 const JobApplication = require('../models/applicationModel');
+const admin = require('../firebase/firebase.js');  
+const Job = require('../models/jobModel');
 const { getUserDetailsById } = require('./helper');
 
 const jobApply = async (req,res) => {
@@ -79,6 +81,7 @@ const getApplicants = async (req, res) => {
                     _id: app._id,
                     client_id: app.client_id,
                     job_id: app.job_id,
+                    status:app.status,
                     user_id: app.user_id,
                     user: user || { displayName: 'Unknown', email: '', photoURL: '' }
                 };
@@ -103,8 +106,37 @@ const getUserApplications = async (req, res) => {
 
         const applications = await JobApplication.find({ user_id: userId });
 
-        // Return detailed application information including status
-        res.status(200).json(applications);
+        const applicationsWithDetails = await Promise.all(
+            applications.map(async (application) => {
+                const job = await Job.findById(application.job_id);  // Get the job details
+
+                if (!job) {
+                    return {
+                        ...application.toObject(),
+                        job_title: 'Job not found',
+                        client_name: 'Client not found'
+                    };
+                }
+
+                // Get the client details using Firebase Admin
+                let clientName = 'Client not found';
+                try {
+                    const user = await admin.auth().getUser(job.client_id);
+                    clientName = user.displayName || user.email || 'Unknown';
+                } catch (error) {
+                    console.error('Error fetching client details:', error);
+                }
+
+                return {
+                    ...application.toObject(),
+                    job_title: job.job_title,
+                    client_name: clientName
+                };
+            })
+        );
+
+        // Return the applications with the added job title and client name
+        res.status(200).json(applicationsWithDetails);
     } catch (error) {
         console.error('Error fetching user applications:', error);
         res.status(500).json({ message: 'Failed to fetch user applications', error: error.message });

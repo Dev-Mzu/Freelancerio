@@ -708,93 +708,119 @@ async function viewApplications(job,jobId) {
       infoContainer.appendChild(img);
       infoContainer.appendChild(details);
 
-      const buttonContainer = document.createElement("div");
+      const buttonContainer = document.createElement("section");
       buttonContainer.classList.add("space-x-2");
 
-      const acceptBtn = document.createElement("button");
-      acceptBtn.textContent = "Accept";
-      acceptBtn.classList.add(
-        "bg-green-600",
-        "text-white",
-        "px-4",
-        "py-2",
-        "rounded",
-        "hover:bg-green-700",
-        "transition"
-      );
+  
+      if(app.status != "applied"){
+         const changedBtn = document.createElement("button");
+          changedBtn.textContent = app.status;
+          if(app.status == "accepted"){
+            changedBtn.classList.add("bg-green-600");
+          }else{
+            changedBtn.classList.add("bg-red-600");
+          }
+          changedBtn.classList.add(
+            "text-white",
+            "px-4",
+            "py-2",
+            "rounded",
+            "transition"
+          );
 
+          changedBtn.disabled = true;  
+          changedBtn.classList.add("opacity-50");
+           buttonContainer.appendChild(changedBtn);
 
-        // Modal creation
-        const modalOverlay = document.createElement("div");
-        modalOverlay.classList.add(
-          "fixed",
-          "top-0",
-          "left-0",
-          "w-full",
-          "h-full",
-          "bg-black",
-          "bg-opacity-50",
-          "flex",
-          "items-center",
-          "justify-center",
-          "z-50",
-          "hidden"
+      }else{
+        const acceptBtn = document.createElement("button");
+        acceptBtn.textContent = "Accept";
+        acceptBtn.classList.add(
+          "bg-green-600",
+          "text-white",
+          "px-4",
+          "py-2",
+          "rounded",
+          "hover:bg-green-700",
+          "transition"
         );
 
-        const modalBox = document.createElement("div");
-        modalBox.classList.add(
-          "bg-white",
-          "p-6",
-          "rounded-lg",
-          "w-full",
-          "max-w-2xl",
-          "shadow-lg"
-        )
 
-      // Add content to modal
-      modalBox.innerHTML = `
-        <h2 class="text-2xl font-bold mb-4">Enter Details for Contract with ${app.user?.displayName}</h2>
-        <textarea class="w-full h-64 border p-2 rounded mb-4 resize-none" placeholder="Enter your notes here..."></textarea>
-        <div class="text-right">
-          <button id="confirmModalBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
-            Confirm
-          </button>
-        </div>
-      `;
+          // Modal creation
+          const modalOverlay = document.createElement("section");
+          modalOverlay.classList.add(
+            "fixed",
+            "top-0",
+            "left-0",
+            "w-full",
+            "h-full",
+            "bg-black",
+            "bg-opacity-50",
+            "flex",
+            "items-center",
+            "justify-center",
+            "z-50",
+            "hidden"
+          );
 
-      modalOverlay.appendChild(modalBox);
-      document.body.appendChild(modalOverlay);
+          const modalBox = document.createElement("section");
+          modalBox.classList.add(
+            "bg-white",
+            "p-6",
+            "rounded-lg",
+            "w-full",
+            "max-w-2xl",
+            "shadow-lg"
+          )
 
-      // Show modal on accept
-      acceptBtn.onclick = () => {
-        modalOverlay.classList.remove("hidden");
-      };
+        // Add content to modal
+        modalBox.innerHTML = `
+          <h2 class="text-2xl font-bold mb-4">Enter Details for Contract with ${app.user?.displayName}</h2>
+          <textarea class="w-full h-64 border p-2 rounded mb-4 resize-none" placeholder="Enter your notes here..."></textarea>
+          <div class="text-right">
+            <button id="confirmModalBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+              Confirm
+            </button>
+          </div>
+        `;
 
-      // Handle confirm button
-      modalBox.querySelector("#confirmModalBtn").onclick = () => {
-        // const textareaValue = modalBox.querySelector("textarea").value;
-        // console.log("Confirmed with text:", textareaValue);
-        // alert(`Confirmed for ${app.user?.displayName} with message: ${textareaValue}`);
-        // modalOverlay.classList.add("hidden"); // Close modal
-        createContract(modalBox,modalOverlay,job,app.user_id,jobId);
-      };
+        modalOverlay.appendChild(modalBox);
+        document.body.appendChild(modalOverlay);
 
-      const rejectBtn = document.createElement("button");
-      rejectBtn.textContent = "Reject";
-      rejectBtn.classList.add(
-        "bg-red-600",
-        "text-white",
-        "px-4",
-        "py-2",
-        "rounded",
-        "hover:bg-red-700",
-        "transition"
-      );
-      // Add reject functionality here
-      rejectBtn.onclick = () => alert(`Rejected ${app.user?.displayName}`);
+        // Show modal on accept
+        acceptBtn.onclick = () => {
+          modalOverlay.classList.remove("hidden");
+        };
 
-      buttonContainer.appendChild(acceptBtn);
-      buttonContainer.appendChild(rejectBtn);
+        // Handle confirm button
+        modalBox.querySelector("#confirmModalBtn").onclick = () => {
+          // const textareaValue = modalBox.querySelector("textarea").value;
+          // console.log("Confirmed with text:", textareaValue);
+          // alert(`Confirmed for ${app.user?.displayName} with message: ${textareaValue}`);
+          // modalOverlay.classList.add("hidden"); // Close modal
+          createContract(modalBox,modalOverlay,job,app.user_id,jobId);
+        };
+
+        const rejectBtn = document.createElement("button");
+        rejectBtn.textContent = "Reject";
+        rejectBtn.classList.add(
+          "bg-red-600",
+          "text-white",
+          "px-4",
+          "py-2",
+          "rounded",
+          "hover:bg-red-700",
+          "transition"
+        );
+        // Add reject functionality here
+        rejectBtn.onclick = () => alert(`Rejected ${app.user?.displayName}`);
+
+        buttonContainer.appendChild(acceptBtn);
+        buttonContainer.appendChild(rejectBtn);
+
+      }
+
+      
 
       card.appendChild(infoContainer);
       card.appendChild(buttonContainer);
@@ -1018,6 +1044,281 @@ async function createContract(modalBox,modalOverlay,job,user_id,jobId){
         console.error("Error creating contract:", err);
         alert("There was an error creating the contract. Please try again.");
     }
+}
+
+
+
+//handle Current jobs
+// Handle Current Jobs
+document.getElementById("view_current_jobs").addEventListener("click", async (event) => {
+    event.preventDefault();
+    document.getElementById('client-page-heading').textContent = "View Current Jobs";
+    document.getElementById("display-section").innerHTML = ''; // Clear the display section
+    
+    try {
+        const userid = sessionStorage.getItem('firebaseId'); // Get the user ID from sessionStorage
+
+        // Fetch the jobs with taken_status = true for the user
+        const response = await fetch(`${baseURL}/job/taken-jobs/${userid}`);
+  
+        if (!response.ok) throw new Error('Failed to fetch jobs');
+  
+        const jobs = await response.json(); // Assuming the response is a list of jobs
+
+        if (jobs.length === 0) {
+            document.getElementById("display-section").innerHTML = "You have no current jobs.";
+            return;
+        }
+
+        jobs.forEach((job) => {
+            console.log(job); // Log each job to the console (or process them as needed)
+
+            // Example: Create a job card and append it to the display section
+            const jobElement = document.createElement('section');
+            jobElement.classList.add('job-card', 'mb-4', 'p-4', 'bg-gray-300', 'rounded-lg');
+            
+            jobElement.innerHTML = `
+                <h3 class="font-semibold text-xl">${job.job_title}</h3>
+                <p>Status: <strong>${job.taken_status ? 'Taken' : 'Available'}</strong></p>
+                <p>Company: ${job.company}</p>
+                <p>Job Description: ${job.job_description.length > 30 ? job.job_description.slice(0, 30) + '...' : job.job_description}</p>
+                <p>Total Pay: $${job.total_pay}</p>
+                <p>Duration: ${job.duration_months} months</p>
+            `;
+
+             jobElement.addEventListener('click', () => {
+                displaySingleJobView(job); // Pass the job object to display its details
+              });
+
+            document.getElementById("display-section").appendChild(jobElement);
+        });
+    } catch (error) {
+        console.error('Error loading jobs:', error);
+    }
+});
+
+
+// Function to display a single job view
+function displaySingleJobView(job) {
+    // Clear the display section
+    document.getElementById("display-section").innerHTML = '';
+
+    // Create a detailed job view element
+    const jobDetailElement = document.createElement('section');
+    jobDetailElement.classList.add('job-detail', 'p-6', 'bg-white', 'rounded-lg', 'shadow-lg');
+
+    // Add Job details
+    jobDetailElement.innerHTML = `
+        <h2 class="text-3xl font-bold text-gray-800 mb-4">${job.job_title}</h2>
+        <p><strong>Status:</strong> ${job.taken_status ? 'Taken' : 'Available'}</p>
+        <p><strong>Company:</strong> ${job.company}</p>
+        <p><strong>Job Description:</strong> ${job.job_description}</p>
+        <p><strong>Total Pay:</strong> R${job.total_pay}</p>
+        <p><strong>Duration:</strong> ${job.duration_months} months</p>
+        <p><strong>Posted On:</strong> ${new Date(job.createdAt).toLocaleDateString()}</p>
+        <h3 class="text-xl font-bold mt-6">Milestones</h3>
+    `;
+
+    // Display Milestones
+    const milestonesContainer = document.createElement('div');
+    milestonesContainer.classList.add('milestones-container', 'mt-4');
+
+    if (job.milestones && job.milestones.length > 0) {
+        job.milestones.forEach((milestone, index) => {
+            const milestoneElement = document.createElement('section');
+            milestoneElement.classList.add('milestone-item', 'p-4', 'bg-gray-100', 'rounded-lg', 'mb-4');
+            
+            milestoneElement.innerHTML = `
+                <h4 class="font-semibold text-lg">Milestone ${index + 1}: ${milestone.milestone_title}</h4>
+                <p><strong>Description:</strong> ${milestone.description}</p>
+                <p><strong>Amount:</strong> R${milestone.amount}</p>
+                <button id="payButton-${index}" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 mt-2">
+                    Pay
+                </button>
+            `;
+
+            // Add event listener to the Pay button
+            const payButton = milestoneElement.querySelector(`#payButton-${index}`);
+            payButton.addEventListener('click', () => {
+                alert(`Processing payment for Milestone ${index + 1}...`); // Placeholder for payment logic
+            });
+
+            milestonesContainer.appendChild(milestoneElement);
+        });
+    } else {
+        milestonesContainer.innerHTML = "<p>No milestones available for this job.</p>";
+    }
+
+    jobDetailElement.appendChild(milestonesContainer);
+
+    // Add the back button
+    jobDetailElement.innerHTML += `
+        <button id="backButton" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 mt-6">
+            Back to Jobs
+        </button>
+    `;
+
+    // Append the detailed job view to the display section
+    document.getElementById("display-section").appendChild(jobDetailElement);
+
+    // Add event listener for the back button to return to the jobs listing
+    document.getElementById('backButton').addEventListener('click', async () => {
+        document.getElementById("display-section").innerHTML = ''; // Clear current view
+        document.getElementById('client-page-heading').textContent = "View Current Jobs";
+        await loadJobs(); // Re-fetch the job list and display it
+    });
+}
+
+
+async function loadJobs() {
+    const userid = sessionStorage.getItem('firebaseId');
+    try {
+        const response = await fetch(`${baseURL}/job/taken-jobs/${userid}`);
+  
+        if (!response.ok) throw new Error('Failed to fetch jobs');
+  
+        const jobs = await response.json();
+
+        if (jobs.length === 0) {
+            document.getElementById("display-section").innerHTML = "You have no current jobs.";
+            return;
+        }
+
+        jobs.forEach((job) => {
+            const jobElement = document.createElement('section');
+            jobElement.classList.add('job-card', 'mb-4', 'p-4', 'bg-gray-300', 'rounded-lg');
+            
+            jobElement.innerHTML = `
+                <h3 class="font-semibold text-xl">${job.job_title}</h3>
+                <p>Status: <strong>${job.taken_status ? 'Taken' : 'Available'}</strong></p>
+                <p>Company: ${job.company}</p>
+                <p>Job Description: ${job.job_description.length > 30 ? job.job_description.slice(0, 30) + '...' : job.job_description}</p>
+                <p>Total Pay: $${job.total_pay}</p>
+                <p>Duration: ${job.duration_months} months</p>
+            `;
+            
+            jobElement.addEventListener('click', () => {
+                displaySingleJobView(job); // Pass the job object to display its details
+            });
+
+            document.getElementById("display-section").appendChild(jobElement);
+        });
+    } catch (error) {
+        console.error('Error loading jobs:', error);
+    }
+}
+
+
+
+
+
+// Handle contracts
+document.getElementById("view_contracts").addEventListener("click", async (event) => {
+    event.preventDefault();
+    document.getElementById('client-page-heading').textContent = "View Contracts";
+    document.getElementById("display-section").innerHTML = ''; // Clear the display section
+    
+    try {
+        const userid = sessionStorage.getItem('firebaseId');
+
+        const response = await fetch(`${baseURL}/contracts/get-all-client-contracts/${userid}`);
+  
+        if (!response.ok) throw new Error('Failed to fetch contracts');
+  
+        const contracts = await response.json(); // Assuming the response is a list of contracts
+
+        if (contracts.length === 0) {
+            document.getElementById("display-section").innerHTML = "You have no contracts to display.";
+            return;
+        }
+
+        contracts.forEach((contract) => {
+            console.log(contract); // Log each contract to the console (or process them as needed)
+
+            // Example: Create a contract card and append it to the display section
+            const contractElement = document.createElement('div');
+            contractElement.classList.add('contract-card', 'mb-4', 'p-4', 'bg-gray-300', 'rounded-lg');
+            
+            contractElement.innerHTML = `
+                <h3 class="font-semibold text-xl">${contract.job_title}</h3>
+                <p>Status: <strong>${contract.status}</strong></p>
+                <p>Freelancer: ${contract.freelancer_name}</p>
+                <p>Contract Terms: ${contract.contract_terms.length > 30 ? contract.contract_terms.slice(0, 30) + '...' : contract.contract_terms}</p>
+            `;
+
+            contractElement.addEventListener('click', () => {
+              showContractDetails(contract); // Call the function to show contract details
+            });
+
+            document.getElementById("display-section").appendChild(contractElement);
+        });
+    } catch (error) {
+        console.error('Error loading contracts:', error);
+    }
+});
+
+function showContractDetails(contract) {
+    document.getElementById('client-page-heading').textContent = "Contract Details"; // Change the heading
+    document.getElementById("display-section").innerHTML = ''; // Clear the display section
+    
+    // Render detailed contract view
+    const contractDetailElement = document.createElement('section');
+    contractDetailElement.classList.add('contract-detail', 'p-8', 'bg-white', 'rounded-lg', 'shadow-lg', 'max-w-3xl', 'mx-auto');
+    
+    contractDetailElement.innerHTML = `
+        <h2 class="text-3xl font-bold text-gray-800 mb-4">${contract.job_title}</h2>
+        
+        <section class="mb-6">
+            <p class="text-lg font-semibold text-gray-700"><strong>Status:</strong> 
+                <span class="${contract.status === 'accepted' ? 'text-green-500' : 'text-red-500'}">${contract.status}</span>
+            </p>
+        </section>
+        
+        <section class="mb-6">
+            <p class="text-lg font-semibold text-gray-700"><strong>Freelancer:</strong> ${contract.freelancer_name}</p>
+        </section>
+
+        <section class="mb-6">
+            <p class="text-lg font-semibold text-gray-700"><strong>Client:</strong> ${contract.client_name}</p>
+        </section>
+        
+        <section class="mb-6">
+            <p class="text-lg font-semibold text-gray-700"><strong>Contract Terms:</strong></p>
+            <p class="text-gray-600 mt-2">${contract.contract_terms}</p>
+        </section>
+
+        <section class="mb-6">
+            <p class="text-lg font-semibold text-gray-700"><strong>Job Description:</strong></p>
+            <p class="text-gray-600 mt-2">${contract.job.job_description}</p>
+        </section>
+
+        <section class="mb-6">
+            <p class="text-lg font-semibold text-gray-700"><strong>Job Pay:</strong> R${contract.job.total_pay}</p>
+        </section>
+
+        <section class="mb-6">
+            <p class="text-lg font-semibold text-gray-700"><strong>Duration:</strong> ${contract.job.duration_months} months</p>
+        </section>
+
+        <section class="mb-6">
+            <p class="text-lg font-semibold text-gray-700"><strong>Created At:</strong> ${new Date(contract.createdAt).toLocaleString()}</p>
+        </section>
+
+        <section class="mb-6">
+            <p class="text-lg font-semibold text-gray-700"><strong>Updated At:</strong> ${new Date(contract.updatedAt).toLocaleString()}</p>
+        </section>
+
+          <!-- Back Button -->
+        <section class="mt-8 text-center">
+            <button 
+                class="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none"
+                onclick="window.history.back()">
+                Back
+            </button>
+        </section>
+    `;
+    
+    document.getElementById("display-section").appendChild(contractDetailElement);
 }
 
 

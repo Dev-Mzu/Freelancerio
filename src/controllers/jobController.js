@@ -1,6 +1,7 @@
 // controllers/jobController.js
 const admin = require('../firebase/firebase.js');
 const Job = require('../models/jobModel');
+const Contract = require('../models/contractModel.js');
 
 // Add a new job
 const addJob = async (req, res) => {
@@ -14,7 +15,8 @@ const addJob = async (req, res) => {
       location_category,
       duration_months,
       total_pay,
-      taken_status:taken_status
+      taken_status:taken_status,
+       milestones
     } = req.body;
 
     console.log(req.body);
@@ -29,6 +31,7 @@ const addJob = async (req, res) => {
       duration_months,
       total_pay,
       taken_status,
+      milestones,
     });
 
     console.log(newJob);
@@ -246,4 +249,130 @@ const getClientId = async (req,res) => {
     res.status(500).json({message : 'Get client id request failed', error: error.message});
   }
 }
-module.exports = {addJob, removeJob, singleJob, allJobs, allJobsByUser , setIsHidden, updateJob,getClientId };
+
+// get all jobs by a specific user
+const allTakenJobs = async (req, res) => {
+  try {
+    // Get the user ID from query or params
+    const userId = req.params.userid || req.query.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required.' });
+    }
+
+    // Only fetch jobs posted by this user
+    const jobs = await Job.find({ client_id: userId, taken_status: true }).lean();
+
+    const userCache = {};
+
+    const jobsWithCompany = await Promise.all(
+      jobs.map(async (job) => {
+        const uid = job.client_id;
+
+        if (userCache[uid]) {
+          return {
+            ...job,
+            company: userCache[uid]
+          };
+        }
+
+        try {
+          const user = await admin.auth().getUser(uid);
+          const companyName = user.displayName || user.email || 'Unknown';
+          userCache[uid] = companyName;
+
+          return {
+            ...job,
+            company: companyName
+          };
+        } catch (error) {
+          console.warn(`Error fetching user for UID ${uid}:`, error.message);
+          return {
+            ...job,
+            company: 'Unknown'
+          };
+        }
+      })
+    );
+
+    console.log(jobsWithCompany);
+    res.status(200).json(jobsWithCompany);
+  } catch (error) {
+    console.error('Error fetching jobs by user:', error);
+    res.status(500).json({ message: 'Internal Server Error', error });
+  }
+};
+
+const allFreelancerTakenJobs = async (req, res) => {
+  try {
+    // Get the user ID from query or params
+    const userId = req.params.userid || req.query.userId;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required.' });
+    }
+
+    // Query the Contract model to get the job IDs for the given user ID
+    const contracts = await Contract.find({
+      $or: [{ freelancer_id: userId }, { client_id: userId }], // Either as freelancer or client
+      status: 'accepted', // Assuming you only want accepted contracts
+    }).lean();
+
+    if (contracts.length === 0) {
+      return res.status(404).json({ message: 'No contracts found for this user.' });
+    }
+
+    // Extract job IDs from the contracts
+    const jobIds = contracts.map(contract => contract.job_id);
+
+    // Query the Job model using the job IDs
+    const jobs = await Job.find({ _id: { $in: jobIds }, taken_status: true }).lean();
+
+    if (jobs.length === 0) {
+      return res.status(404).json({ message: 'No jobs found for these contracts.' });
+    }
+
+    // Cache to store company names for the users
+    const userCache = {};
+
+    // Fetch company data for each job (client's company name)
+    const jobsWithCompany = await Promise.all(
+      jobs.map(async (job) => {
+        const uid = job.client_id; // Assuming client_id is the company user
+
+        if (userCache[uid]) {
+          return {
+            ...job,
+            company: userCache[uid]
+          };
+        }
+
+        try {
+          const user = await admin.auth().getUser(uid);
+          const companyName = user.displayName || user.email || 'Unknown';
+          userCache[uid] = companyName;
+
+          return {
+            ...job,
+            company: companyName
+          };
+        } catch (error) {
+          console.warn(`Error fetching user for UID ${uid}:`, error.message);
+          return {
+            ...job,
+            company: 'Unknown'
+          };
+        }
+      })
+    );
+
+    // Respond with the jobs data along with company names
+    res.status(200).json(jobsWithCompany);
+  } catch (error) {
+    console.error('Error fetching jobs by user:', error);
+    res.status(500).json({ message: 'Internal Server Error', error });
+  }
+};
+
+
+module.exports = {addJob, removeJob, singleJob, allJobs, allJobsByUser , setIsHidden, updateJob,getClientId , allTakenJobs, allFreelancerTakenJobs};
